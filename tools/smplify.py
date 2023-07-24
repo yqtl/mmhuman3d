@@ -1,3 +1,4 @@
+import json
 import argparse
 import os
 import time
@@ -79,7 +80,8 @@ def main():
 
     human_data = HumanData.fromfile(args.input)
     keypoints_src = human_data[args.input_type]
-    keypoints_src_mask = human_data[args.input_type + '_mask']
+    keypoints_src_mask = np.ones(keypoints_src.shape[:-1])
+    #keypoints_src_mask = human_data[args.input_type + '_mask']
     if args.input_type == 'keypoints2d':
         assert keypoints_src.shape[-1] in {2, 3}
     elif args.input_type == 'keypoints3d':
@@ -93,6 +95,16 @@ def main():
         mask=keypoints_src_mask,
         src=args.keypoint_type,
         dst=smplify_config.body_model['keypoint_dst'])
+    json_file='keypoints_COCO.json'
+    with open(json_file, 'r') as f:
+        keypoints_human_data = json.load(f)
+    pose_keypoints_2d = keypoints_human_data["people"][0]["pose_keypoints_2d"]
+    pose_keypoints_2d = np.array(pose_keypoints_2d).reshape(1, 17, 3)
+    print('loaded from json kpts2d:', pose_keypoints_2d)
+    keypoints, mask = convert_kps(pose_keypoints_2d, src='COCO', dst='smpl_45')
+    print('mask are', mask)
+    print('converted kpts: ', keypoints)
+    print('convert_back_shape: ', keypoints.shape)
     keypoints_conf = np.repeat(mask[None], keypoints.shape[0], axis=0)
 
     batch_size = args.batch_size if args.batch_size else keypoints.shape[0]

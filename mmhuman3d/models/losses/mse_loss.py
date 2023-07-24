@@ -21,7 +21,7 @@ def mse_loss(pred, target):
 @weighted_loss
 def mse_loss_with_gmof(pred, target, sigma):
     """Extended MSE Loss with GMOF."""
-    loss = F.mse_loss(pred, target, reduction='none')
+    loss = F.mse_loss(pred, target[...,:2], reduction='none')
     loss = gmof(loss, sigma)
     return loss
 
